@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import OffersPage from "../src/pages/OffersPage.tsx";
 import { adminUser, contactUser, stubFetch, studentUser } from "./helpers/fetchMock.ts";
@@ -24,16 +24,45 @@ const offers = [
 
 describe("OffersPage", () => {
   it("affiche les offres avec leurs libellés français", async () => {
-    stubFetch({ "/api/offers": () => Response.json(offers) });
+    const fetchMock = stubFetch({ "/api/offers": () => Response.json(offers) });
 
     render(<OffersPage user={contactUser} token="jeton" onUnauthorized={vi.fn()} />);
 
+    expect(screen.getByRole("combobox", { name: "Période" })).toHaveValue("");
+    expect(screen.getByRole("option", { name: "Toutes les périodes" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "P1" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "P2" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Autre" })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith("/api/offers", expect.anything());
     expect(await screen.findByText("Refonte du portail client")).toBeInTheDocument();
     expect(screen.getByText("Soumise")).toBeInTheDocument();
     expect(screen.getByText("Attribuée")).toBeInTheDocument();
-    expect(screen.getByText("Autre")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Autre" })).toBeInTheDocument();
     expect(screen.getByText("2 offres")).toBeInTheDocument();
     expect(screen.getByText("Les offres que vous avez déposées.")).toBeInTheDocument();
+  });
+
+  it("transmet la période sélectionnée et permet de revenir à toutes les périodes", async () => {
+    const fetchMock = stubFetch({ "/api/offers": () => Response.json([]) });
+
+    render(<OffersPage user={adminUser} token="jeton" onUnauthorized={vi.fn()} />);
+    const periodSelect = screen.getByRole("combobox", { name: "Période" });
+
+    fireEvent.change(periodSelect, { target: { value: "P1" } });
+    await waitFor(() => expect(fetchMock).toHaveBeenLastCalledWith("/api/offers?period=P1", expect.anything()));
+
+    fireEvent.change(periodSelect, { target: { value: "P2" } });
+    await waitFor(() => expect(fetchMock).toHaveBeenLastCalledWith("/api/offers?period=P2", expect.anything()));
+
+    fireEvent.change(periodSelect, { target: { value: "OTHER" } });
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenLastCalledWith("/api/offers?period=OTHER", expect.anything()),
+    );
+
+    fireEvent.change(periodSelect, { target: { value: "" } });
+    await waitFor(() => expect(fetchMock).toHaveBeenLastCalledWith("/api/offers", expect.anything()));
+    expect(periodSelect).toHaveValue("");
+    expect(await screen.findByText("Aucune offre à afficher.")).toBeInTheDocument();
   });
 
   it("adapte la description au profil", async () => {

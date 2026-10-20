@@ -74,6 +74,8 @@ Retourne l'utilisateur connecté.
 ### Requête
 
 - Header `Authorization` obligatoire
+- Paramètre facultatif `period` : `P1`, `P2` ou `OTHER`. S'il est absent, toutes les
+  périodes sont retournées.
 
 ### Réponses
 
@@ -166,5 +168,6 @@ récente à la plus ancienne, puis de la plus récente à la plus ancienne.
 `period` vaut `P1`, `P2` ou `OTHER`. `status` vaut `SUBMITTED` (soumise), `PENDING`
 (en attente), `PUBLISHED` (publiée), `ASSIGNED` (attribuée) ou `ARCHIVED` (archivée).
 
+- `400` `INVALID_QUERY` : `period` est répété ou n'est pas `P1`, `P2` ou `OTHER`.
 - `401` `UNAUTHENTICATED` : session absente ou invalide.
 - `403` `FORBIDDEN` : contact seulement promoteur ou signataire.

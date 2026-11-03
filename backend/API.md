@@ -32,6 +32,7 @@ Toute erreur a la même forme :
 | 401 | `UNAUTHENTICATED` | Session absente, expirée ou invalide ; compte non autorisé à se connecter |
 | 403 | `FORBIDDEN` | Utilisateur connecté, mais sans droit sur la ressource |
 | 404 | `NOT_FOUND` | Route inconnue |
+| 409 | `OFFER_NOT_PUBLISHED` | L'offre existe, mais n'est pas publiée et ne peut pas recevoir de candidature |
 | 500 | `INTERNAL_ERROR` | Erreur inattendue du serveur |
 
 ## GET /health
@@ -171,3 +172,45 @@ récente à la plus ancienne, puis de la plus récente à la plus ancienne.
 - `400` `INVALID_QUERY` : `period` est répété ou n'est pas `P1`, `P2` ou `OTHER`.
 - `401` `UNAUTHENTICATED` : session absente ou invalide.
 - `403` `FORBIDDEN` : contact seulement promoteur ou signataire.
+
+## POST /applications
+
+Crée une candidature pour l'étudiant connecté. Plusieurs candidatures en cours par le même
+étudiant pour une même offre sont autorisées. Le retrait et la consultation des candidatures
+ne sont pas encore implémentés.
+
+### Requête
+
+- Header `Authorization` obligatoire
+- Réservée aux étudiants
+- Body JSON :
+
+```json
+{
+  "offerId": 7,
+  "message": "Le sujet correspond à mes intérêts et à mes compétences."
+}
+```
+
+`message` est facultatif. Un message composé uniquement d'espaces est enregistré comme
+absent. L'identifiant de l'étudiant est toujours déterminé à partir de la session.
+
+### Réponses
+
+- `201` : candidature créée
+
+```json
+{
+  "id": 12,
+  "offerId": 7,
+  "message": "Le sujet correspond à mes intérêts et à mes compétences.",
+  "status": "IN_PROGRESS",
+  "appliedAt": "2026-11-03 14:30:00"
+}
+```
+
+- `400` `INVALID_BODY` : `offerId` absent ou invalide, ou `message` qui n'est pas un texte.
+- `401` `UNAUTHENTICATED` : session absente ou invalide.
+- `403` `FORBIDDEN` : profil autre qu'étudiant.
+- `404` `NOT_FOUND` : offre inexistante.
+- `409` `OFFER_NOT_PUBLISHED` : l'offre n'est pas publiée.

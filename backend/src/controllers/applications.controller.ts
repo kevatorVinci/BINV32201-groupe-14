@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { toApplicationDto } from "../mappers/application.mapper.ts";
+import { toApplicationDto, toApplicationListDto } from "../mappers/application.mapper.ts";
 import { getCurrentUser } from "../middlewares/authenticate.ts";
 import { authorize } from "../middlewares/authorize.ts";
 import type { ApplicationsService } from "../services/applications.service.ts";
@@ -25,6 +25,14 @@ const isCreateApplicationBody = (value: unknown): value is CreateApplicationBody
 export const createApplicationsRouter = (applicationsService: ApplicationsService) => {
   const router = Router();
 
+  router.get("/", authorize(isStudent), (req, res) => {
+    const user = getCurrentUser(req);
+    if (user.kind !== "STUDENT") {
+      throw new HttpError(403, "FORBIDDEN", "Seul un étudiant peut consulter ses candidatures");
+    }
+    res.json(applicationsService.listApplications(user.id).map(toApplicationListDto));
+  });
+
   router.post("/", authorize(isStudent), (req, res) => {
     const body: unknown = req.body;
     if (!isCreateApplicationBody(body)) {
@@ -41,7 +49,7 @@ export const createApplicationsRouter = (applicationsService: ApplicationsServic
       throw new HttpError(403, "FORBIDDEN", "Seul un étudiant peut candidater");
     }
 
-    const application = applicationsService.createApplication(user, body.offerId, message);
+    const application = applicationsService.createApplication(user.id, body.offerId, message);
     res.status(201).json(toApplicationDto(application));
   });
 

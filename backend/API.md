@@ -173,11 +173,46 @@ récente à la plus ancienne, puis de la plus récente à la plus ancienne.
 - `401` `UNAUTHENTICATED` : session absente ou invalide.
 - `403` `FORBIDDEN` : contact seulement promoteur ou signataire.
 
+## GET /applications
+
+Retourne les candidatures de l'étudiant connecté uniquement, de la plus récente à la plus
+ancienne. Les candidatures retirées ou traitées restent incluses avec leur statut courant.
+
+### Requête
+
+- Header `Authorization` obligatoire
+- Réservée aux étudiants
+
+### Réponses
+
+- `200` : tableau de candidatures (vide si l'étudiant n'a pas encore candidaté)
+
+```json
+[
+  {
+    "id": 12,
+    "offerId": 7,
+    "offerTitle": "Assistant conversationnel interne",
+    "companyShortName": "Nexalis",
+    "academicYear": "2026-2027",
+    "period": "P2",
+    "message": "Le sujet correspond à mes intérêts.",
+    "status": "IN_PROGRESS",
+    "appliedAt": "2026-11-03 14:30:00"
+  }
+]
+```
+
+`status` vaut `IN_PROGRESS` (en cours), `SELECTED` (retenue), `REJECTED` (non retenue)
+ou `WITHDRAWN` (retirée).
+
+- `401` `UNAUTHENTICATED` : session absente ou invalide.
+- `403` `FORBIDDEN` : profil autre qu'étudiant.
+
 ## POST /applications
 
 Crée une candidature pour l'étudiant connecté. Plusieurs candidatures en cours par le même
-étudiant pour une même offre sont autorisées. Le retrait et la consultation des candidatures
-ne sont pas encore implémentés.
+étudiant pour une même offre sont autorisées. Le retrait n'est pas encore implémenté.
 
 ### Requête
 

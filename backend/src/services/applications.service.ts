@@ -1,12 +1,14 @@
-import { toApplication } from "../mappers/application.mapper.ts";
-import type { Application } from "../models/application.ts";
-import type { User } from "../models/user.ts";
+import { toApplication, toApplicationListItem } from "../mappers/application.mapper.ts";
+import type { Application, ApplicationListItem } from "../models/application.ts";
 import type { ApplicationsRepository } from "../repositories/applications.repository.ts";
 import { HttpError } from "../utils/httpError.ts";
 
 export const createApplicationsService = (repository: ApplicationsRepository) => ({
+  listApplications: (
+    studentId: number,
+  ): ApplicationListItem[] => repository.findForStudent(studentId).map(toApplicationListItem),
   createApplication: (
-    student: Extract<User, { kind: "STUDENT" }>,
+    studentId: number,
     offerId: number,
     message: string | null,
   ): Application => {
@@ -17,7 +19,7 @@ export const createApplicationsService = (repository: ApplicationsRepository) =>
     if (offerStatus !== "PUBLISHED") {
       throw new HttpError(409, "OFFER_NOT_PUBLISHED", "Cette offre n'est pas publiée");
     }
-    return toApplication(repository.create({ offerId, studentId: student.id, message }));
+    return toApplication(repository.create({ offerId, studentId, message }));
   },
 });
 

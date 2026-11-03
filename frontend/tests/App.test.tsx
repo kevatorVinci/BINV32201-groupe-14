@@ -2,13 +2,13 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { beforeEach, describe, expect, it } from "vitest";
 import App from "../src/App.tsx";
-import { studentUser, stubFetch } from "./helpers/fetchMock.ts";
+import { adminUser, studentUser, stubFetch } from "./helpers/fetchMock.ts";
 
 const TOKEN_KEY = "gesta.token";
 
-const renderApp = () =>
+const renderApp = (initialEntry = "/") =>
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <App />
     </MemoryRouter>,
   );
@@ -53,6 +53,43 @@ describe("App : session", () => {
 
     expect(await screen.findByRole("heading", { name: "Bonjour Mateusz" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Entreprises" })).toBeInTheDocument();
+  });
+
+  it("permet à un étudiant d'ouvrir la page Mes candidatures", async () => {
+    localStorage.setItem(TOKEN_KEY, "jeton-mateusz");
+    stubFetch({
+      "/api/auth/me": () => Response.json(studentUser),
+      "/api/health": () => Response.json({ status: "ok" }),
+      "/api/applications": () => Response.json([]),
+    });
+
+    renderApp("/mes-candidatures");
+
+    expect(await screen.findByRole("heading", { name: "Mes candidatures" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Mes candidatures" })).toHaveAttribute(
+      "href",
+      "/mes-candidatures",
+    );
+    expect(
+      await screen.findByText("Vous n’avez pas encore de candidature."),
+    ).toBeInTheDocument();
+  });
+
+  it("refuse la page Mes candidatures à un profil autre qu'étudiant", async () => {
+    localStorage.setItem(TOKEN_KEY, "jeton-admin");
+    const fetchMock = stubFetch({
+      "/api/auth/me": () => Response.json(adminUser),
+      "/api/health": () => Response.json({ status: "ok" }),
+    });
+
+    renderApp("/mes-candidatures");
+
+    expect(await screen.findByRole("heading", { name: "Page introuvable" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Mes candidatures" })).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      "/api/applications",
+      expect.anything(),
+    );
   });
 
   it("oublie une session refusée par le backend", async () => {

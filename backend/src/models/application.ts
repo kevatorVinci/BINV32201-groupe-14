@@ -15,6 +15,13 @@ export interface ApplicationDbo {
   applied_at: string;
 }
 
+export interface ApplicationListDbo extends ApplicationDbo {
+  offer_title: string;
+  company_short_name: string;
+  academic_year_label: string;
+  period_code: "P1" | "P2" | "OTHER";
+}
+
 export interface Application {
   id: number;
   offerId: number;
@@ -23,4 +30,13 @@ export interface Application {
   appliedAt: string;
 }
 
+export interface ApplicationListItem extends Application {
+  offerTitle: string;
+  companyShortName: string;
+  academicYear: string;
+  period: "P1" | "P2" | "OTHER";
+}
+
 export interface ApplicationDto extends Application {}
+
+export interface ApplicationListDto extends ApplicationListItem {}

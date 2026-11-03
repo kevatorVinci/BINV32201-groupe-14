@@ -22,6 +22,17 @@ const isCreateApplicationBody = (value: unknown): value is CreateApplicationBody
   );
 };
 
+const parseApplicationId = (value: unknown): number => {
+  if (typeof value !== "string" || !/^[1-9]\d*$/.test(value)) {
+    throw new HttpError(400, "INVALID_QUERY", "L'identifiant de candidature doit être positif");
+  }
+  const id = Number(value);
+  if (!Number.isSafeInteger(id)) {
+    throw new HttpError(400, "INVALID_QUERY", "L'identifiant de candidature est invalide");
+  }
+  return id;
+};
+
 export const createApplicationsRouter = (applicationsService: ApplicationsService) => {
   const router = Router();
 
@@ -31,6 +42,18 @@ export const createApplicationsRouter = (applicationsService: ApplicationsServic
       throw new HttpError(403, "FORBIDDEN", "Seul un étudiant peut consulter ses candidatures");
     }
     res.json(applicationsService.listApplications(user.id).map(toApplicationListDto));
+  });
+
+  router.patch("/:id/withdraw", authorize(isStudent), (req, res) => {
+    const user = getCurrentUser(req);
+    if (user.kind !== "STUDENT") {
+      throw new HttpError(403, "FORBIDDEN", "Seul un étudiant peut retirer une candidature");
+    }
+    const application = applicationsService.withdrawApplication(
+      user.id,
+      parseApplicationId(req.params.id),
+    );
+    res.json(toApplicationDto(application));
   });
 
   router.post("/", authorize(isStudent), (req, res) => {

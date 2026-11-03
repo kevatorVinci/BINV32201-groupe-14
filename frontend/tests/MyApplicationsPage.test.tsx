@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import MyApplicationsPage from "../src/pages/MyApplicationsPage.tsx";
 import { stubFetch } from "./helpers/fetchMock.ts";
@@ -68,7 +68,7 @@ describe("MyApplicationsPage", () => {
       "/api/applications",
       expect.objectContaining({ headers: { Authorization: "jeton" } }),
     );
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Retirer" })).toHaveLength(1);
   });
 
   it("affiche un message lorsque l'étudiant n'a aucune candidature", async () => {
@@ -94,6 +94,59 @@ describe("MyApplicationsPage", () => {
     const onUnauthorized = vi.fn();
 
     render(<MyApplicationsPage token="jeton" onUnauthorized={onUnauthorized} />);
+
+    await waitFor(() => expect(onUnauthorized).toHaveBeenCalled());
+  });
+
+  it("permet de retirer une candidature en cours et met son statut à jour", async () => {
+    const fetchMock = stubFetch({
+      "/api/applications/1/withdraw": () =>
+        Response.json({
+          id: 1,
+          offerId: 7,
+          message: "Le sujet m'intéresse.",
+          status: "WITHDRAWN",
+          appliedAt: "2026-10-04 14:50:00",
+        }),
+      "/api/applications": () => Response.json(applications),
+    });
+
+    render(<MyApplicationsPage token="jeton" onUnauthorized={vi.fn()} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Retirer" }));
+
+    expect(await screen.findByText("Retirée")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retirer" })).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/applications/1/withdraw",
+      expect.objectContaining({
+        method: "PATCH",
+        headers: { Authorization: "jeton" },
+      }),
+    );
+  });
+
+  it("affiche l'erreur si le serveur refuse le retrait", async () => {
+    stubFetch({
+      "/api/applications/1/withdraw": () => new Response(null, { status: 409 }),
+      "/api/applications": () => Response.json(applications),
+    });
+
+    render(<MyApplicationsPage token="jeton" onUnauthorized={vi.fn()} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Retirer" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("statut 409");
+    expect(screen.getByRole("button", { name: "Retirer" })).toBeInTheDocument();
+  });
+
+  it("redirige vers la connexion si le retrait retourne 401", async () => {
+    const onUnauthorized = vi.fn();
+    stubFetch({
+      "/api/applications/1/withdraw": () => new Response(null, { status: 401 }),
+      "/api/applications": () => Response.json(applications),
+    });
+
+    render(<MyApplicationsPage token="jeton" onUnauthorized={onUnauthorized} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Retirer" }));
 
     await waitFor(() => expect(onUnauthorized).toHaveBeenCalled());
   });

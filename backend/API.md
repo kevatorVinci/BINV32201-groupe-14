@@ -32,6 +32,7 @@ Toute erreur a la même forme :
 | 401 | `UNAUTHENTICATED` | Session absente, expirée ou invalide ; compte non autorisé à se connecter |
 | 403 | `FORBIDDEN` | Utilisateur connecté, mais sans droit sur la ressource |
 | 404 | `NOT_FOUND` | Route inconnue |
+| 409 | `APPLICATION_NOT_WITHDRAWABLE` | Candidature déjà traitée ou déjà retirée |
 | 409 | `OFFER_NOT_PUBLISHED` | L'offre existe, mais n'est pas publiée et ne peut pas recevoir de candidature |
 | 500 | `INTERNAL_ERROR` | Erreur inattendue du serveur |
 
@@ -208,6 +209,29 @@ ou `WITHDRAWN` (retirée).
 
 - `401` `UNAUTHENTICATED` : session absente ou invalide.
 - `403` `FORBIDDEN` : profil autre qu'étudiant.
+
+## PATCH /applications/:id/withdraw
+
+Retire la candidature identifiée si elle appartient à l'étudiant connecté et est encore
+`IN_PROGRESS`. La candidature est conservée et passe à `WITHDRAWN`. Une candidature
+sélectionnée, refusée ou déjà retirée ne peut pas être retirée à nouveau. L'étudiant peut
+ensuite déposer une nouvelle candidature à la même offre.
+
+### Requête
+
+- Header `Authorization` obligatoire
+- Réservée aux étudiants
+- Paramètre de chemin `id` : identifiant positif de la candidature
+- Aucun corps requis
+
+### Réponses
+
+- `200` : candidature mise à jour, au format retourné par `POST /applications`
+- `400` `INVALID_QUERY` : identifiant absent ou invalide.
+- `401` `UNAUTHENTICATED` : session absente ou invalide.
+- `403` `FORBIDDEN` : profil autre qu'étudiant.
+- `404` `NOT_FOUND` : candidature inexistante ou appartenant à un autre étudiant.
+- `409` `APPLICATION_NOT_WITHDRAWABLE` : candidature traitée ou déjà retirée.
 
 ## POST /applications
 

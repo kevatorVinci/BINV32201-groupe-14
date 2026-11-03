@@ -2,6 +2,8 @@ import EmptyState from "../components/EmptyState.tsx";
 import ErrorState from "../components/ErrorState.tsx";
 import LoadingState from "../components/LoadingState.tsx";
 import StatusBadge from "../components/StatusBadge.tsx";
+import { useState } from "react";
+import type { ApplicationListItem } from "../models/application.ts";
 import { useApplications } from "../hooks/useApplications.ts";
 import { APPLICATION_STATUS_LABELS, APPLICATION_STATUS_TONES, PERIOD_LABELS } from "../utils/labels.ts";
 
@@ -10,8 +12,49 @@ interface MyApplicationsPageProps {
   onUnauthorized: () => void;
 }
 
+interface WithdrawalActionProps {
+  application: ApplicationListItem;
+  onWithdraw: (applicationId: number) => Promise<void>;
+}
+
+const WithdrawalAction = ({ application, onWithdraw }: WithdrawalActionProps) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleWithdraw = async () => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await onWithdraw(application.id);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Erreur inconnue");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (application.status !== "IN_PROGRESS") return null;
+
+  return (
+    <div className="offer-application-form">
+      <button
+        className="button button-primary"
+        type="button"
+        disabled={isSubmitting}
+        onClick={() => void handleWithdraw()}
+      >
+        Retirer
+      </button>
+      {error !== null && <p role="alert">{error}</p>}
+    </div>
+  );
+};
+
 const MyApplicationsPage = ({ token, onUnauthorized }: MyApplicationsPageProps) => {
-  const { applications, isLoading, error } = useApplications(token, onUnauthorized);
+  const { applications, isLoading, error, withdrawApplication } = useApplications(
+    token,
+    onUnauthorized,
+  );
 
   const renderContent = () => {
     if (error !== null) return <ErrorState message={error} />;
@@ -32,6 +75,7 @@ const MyApplicationsPage = ({ token, onUnauthorized }: MyApplicationsPageProps) 
               <th scope="col">Date de candidature</th>
               <th scope="col">Message</th>
               <th scope="col">Statut</th>
+              <th scope="col">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -47,6 +91,12 @@ const MyApplicationsPage = ({ token, onUnauthorized }: MyApplicationsPageProps) 
                   <StatusBadge
                     label={APPLICATION_STATUS_LABELS[application.status]}
                     tone={APPLICATION_STATUS_TONES[application.status]}
+                  />
+                </td>
+                <td>
+                  <WithdrawalAction
+                    application={application}
+                    onWithdraw={withdrawApplication}
                   />
                 </td>
               </tr>

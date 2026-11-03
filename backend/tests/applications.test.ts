@@ -190,3 +190,86 @@ describe("GET /applications", () => {
     );
   });
 });
+
+describe("PATCH /applications/:id/withdraw", () => {
+  const withdrawAs = (studentId: number, applicationId: number) =>
+    request(app)
+      .patch(`/applications/${applicationId}/withdraw`)
+      .set("Authorization", tokenFor("STUDENT", studentId));
+
+  it("retire une candidature en cours et permet ensuite de recandidater", async () => {
+    const response = await withdrawAs(STUDENT.LUCAS_DUPONT, APPLICATION.LUCAS_FLEET_APP);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      id: APPLICATION.LUCAS_FLEET_APP,
+      offerId: OFFER.FLEET_APP,
+      message: "Le développement React m'intéresse particulièrement.",
+      status: "WITHDRAWN",
+      appliedAt: "2026-10-02 18:10:00",
+    });
+
+    const listResponse = await request(app)
+      .get("/applications")
+      .set("Authorization", tokenFor("STUDENT", STUDENT.LUCAS_DUPONT));
+    expect(listResponse.body[0].status).toBe("WITHDRAWN");
+
+    const reapplication = await applyAs("STUDENT", STUDENT.LUCAS_DUPONT, {
+      offerId: OFFER.FLEET_APP,
+    });
+    expect(reapplication.status).toBe(201);
+  });
+
+  it("refuse une requête sans session (401)", async () => {
+    const response = await request(app).patch(
+      `/applications/${APPLICATION.LUCAS_FLEET_APP}/withdraw`,
+    );
+
+    expect(response.status).toBe(401);
+  });
+
+  it("refuse le retrait par un profil autre qu'étudiant (403)", async () => {
+    const response = await request(app)
+      .patch(`/applications/${APPLICATION.LUCAS_FLEET_APP}/withdraw`)
+      .set("Authorization", tokenFor("ADMIN", ADMINISTRATOR.ANNE_LECLERCQ));
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe("FORBIDDEN");
+  });
+
+  it("ne révèle pas une candidature appartenant à un autre étudiant (404)", async () => {
+    const response = await withdrawAs(STUDENT.LUCAS_DUPONT, APPLICATION.INES_FLEET_APP);
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe("NOT_FOUND");
+  });
+
+  it("refuse un identifiant invalide (400)", async () => {
+    const response = await request(app)
+      .patch("/applications/abc/withdraw")
+      .set("Authorization", tokenFor("STUDENT", STUDENT.LUCAS_DUPONT));
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe("INVALID_QUERY");
+  });
+
+  it("refuse le retrait d'une candidature sélectionnée (409)", async () => {
+    const response = await withdrawAs(
+      STUDENT.MATEUSZ_KOWALSKI,
+      APPLICATION.MATEUSZ_CLOUD_MIGRATION,
+    );
+
+    expect(response.status).toBe(409);
+    expect(response.body.error.code).toBe("APPLICATION_NOT_WITHDRAWABLE");
+  });
+
+  it.each([
+    [STUDENT.LEA_MERTENS, APPLICATION.LEA_CLOUD_MIGRATION],
+    [STUDENT.INES_HADDAD, APPLICATION.INES_BILLING_API],
+  ])("refuse une candidature déjà traitée ou retirée (%i)", async (studentId, applicationId) => {
+    const response = await withdrawAs(studentId, applicationId);
+
+    expect(response.status).toBe(409);
+    expect(response.body.error.code).toBe("APPLICATION_NOT_WITHDRAWABLE");
+  });
+});

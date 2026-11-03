@@ -21,6 +21,20 @@ export const createApplicationsService = (repository: ApplicationsRepository) =>
     }
     return toApplication(repository.create({ offerId, studentId, message }));
   },
+  withdrawApplication: (studentId: number, applicationId: number): Application => {
+    const { application, wasWithdrawn } = repository.withdraw({ id: applicationId, studentId });
+    if (application === undefined) {
+      throw new HttpError(404, "NOT_FOUND", "Cette candidature n'existe pas");
+    }
+    if (!wasWithdrawn) {
+      throw new HttpError(
+        409,
+        "APPLICATION_NOT_WITHDRAWABLE",
+        "Cette candidature a déjà été traitée ou retirée",
+      );
+    }
+    return toApplication(application);
+  },
 });
 
 export type ApplicationsService = ReturnType<typeof createApplicationsService>;

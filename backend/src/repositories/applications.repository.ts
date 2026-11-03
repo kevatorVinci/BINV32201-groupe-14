@@ -24,6 +24,11 @@ interface StudentIdParams {
   studentId: number;
 }
 
+interface WithdrawalParams {
+  id: number;
+  studentId: number;
+}
+
 export const createApplicationsRepository = (db: Db) => {
   const findOfferStatus = db.prepare<OfferIdParams, OfferStatusRow>(
     "SELECT status FROM offers WHERE id = @id",
@@ -49,12 +54,32 @@ export const createApplicationsRepository = (db: Db) => {
     WHERE a.student_id = @studentId
     ORDER BY a.applied_at DESC, a.id DESC
   `);
+  const withdrawApplication = db.prepare<WithdrawalParams, never>(`
+    UPDATE applications
+    SET status = 'WITHDRAWN'
+    WHERE id = @id AND student_id = @studentId AND status = 'IN_PROGRESS'
+  `);
+  const findOwnedApplication = db.prepare<WithdrawalParams, ApplicationDbo>(`
+    SELECT id, offer_id, message, status, applied_at
+    FROM applications
+    WHERE id = @id AND student_id = @studentId
+  `);
 
   return {
     findOfferStatus: (offerId: number): OfferStatus | undefined =>
       findOfferStatus.get({ id: offerId })?.status,
     findForStudent: (studentId: number): ApplicationListDbo[] =>
       findApplicationsForStudent.all({ studentId }),
+    withdraw: ({ id, studentId }: WithdrawalParams): {
+      application: ApplicationDbo | undefined;
+      wasWithdrawn: boolean;
+    } => {
+      const result = withdrawApplication.run({ id, studentId });
+      return {
+        application: findOwnedApplication.get({ id, studentId }),
+        wasWithdrawn: result.changes > 0,
+      };
+    },
     create: ({ offerId, studentId, message }: InsertApplicationParams): ApplicationDbo => {
       const result = insertApplication.run({ offerId, studentId, message });
       const application = findApplication.get({ id: Number(result.lastInsertRowid) });

@@ -95,4 +95,118 @@ describe("OffersPage", () => {
 
     await waitFor(() => expect(onUnauthorized).toHaveBeenCalled());
   });
+
+  it("permet à un étudiant de candidater à une offre publiée avec un message", async () => {
+    const publishedOffer = {
+      id: 7,
+      title: "Assistant conversationnel interne",
+      companyShortName: "Nexalis",
+      academicYear: "2026-2027",
+      period: "P2",
+      status: "PUBLISHED",
+    };
+    const fetchMock = stubFetch({
+      "/api/offers": () => Response.json([publishedOffer, offers[0]]),
+      "/api/applications": () =>
+        Response.json({
+          id: 20,
+          offerId: 7,
+          message: "Expérience React",
+          status: "IN_PROGRESS",
+          appliedAt: "2026-11-03 14:30:00",
+        }),
+    });
+
+    render(<OffersPage user={studentUser} token="jeton" onUnauthorized={vi.fn()} />);
+
+    expect(await screen.findByRole("button", { name: "Candidater" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Candidater" })).toHaveLength(1);
+    const message = screen.getByRole("textbox", {
+      name: "Message facultatif pour « Assistant conversationnel interne »",
+    });
+    fireEvent.change(message, { target: { value: "  Expérience React  " } });
+    fireEvent.click(screen.getByRole("button", { name: "Candidater" }));
+
+    expect(await screen.findByRole("status")).toHaveTextContent("Candidature envoyée.");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/applications",
+      expect.objectContaining({
+        method: "POST",
+        headers: { Authorization: "jeton", "Content-Type": "application/json" },
+        body: JSON.stringify({ offerId: 7, message: "Expérience React" }),
+      }),
+    );
+  });
+
+  it("permet de candidater sans message et affiche les erreurs d'API", async () => {
+    const fetchMock = stubFetch({
+      "/api/offers": () =>
+        Response.json([
+          {
+            id: 7,
+            title: "Assistant conversationnel interne",
+            companyShortName: "Nexalis",
+            academicYear: "2026-2027",
+            period: "P2",
+            status: "PUBLISHED",
+          },
+        ]),
+      "/api/applications": () => new Response(null, { status: 409 }),
+    });
+
+    render(<OffersPage user={studentUser} token="jeton" onUnauthorized={vi.fn()} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Candidater" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("statut 409");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/applications",
+      expect.objectContaining({
+        body: JSON.stringify({ offerId: 7 }),
+      }),
+    );
+  });
+
+  it("rend les offres publiées non candidatables aux autres profils", async () => {
+    stubFetch({
+      "/api/offers": () =>
+        Response.json([
+          {
+            id: 7,
+            title: "Assistant conversationnel interne",
+            companyShortName: "Nexalis",
+            academicYear: "2026-2027",
+            period: "P2",
+            status: "PUBLISHED",
+          },
+        ]),
+    });
+
+    render(<OffersPage user={adminUser} token="jeton" onUnauthorized={vi.fn()} />);
+
+    expect(await screen.findByText("Assistant conversationnel interne")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Candidater" })).not.toBeInTheDocument();
+  });
+
+  it("redirige vers la connexion quand la candidature retourne 401", async () => {
+    const onUnauthorized = vi.fn();
+    stubFetch({
+      "/api/offers": () =>
+        Response.json([
+          {
+            id: 7,
+            title: "Assistant conversationnel interne",
+            companyShortName: "Nexalis",
+            academicYear: "2026-2027",
+            period: "P2",
+            status: "PUBLISHED",
+          },
+        ]),
+      "/api/applications": () => new Response(null, { status: 401 }),
+    });
+
+    render(<OffersPage user={studentUser} token="jeton" onUnauthorized={onUnauthorized} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Candidater" }));
+
+    await waitFor(() => expect(onUnauthorized).toHaveBeenCalled());
+  });
 });

@@ -196,3 +196,9 @@ répond `409` et `APPLICATION_NOT_WITHDRAWABLE` pour une candidature `SELECTED`,
 modifie malgré tout en `WITHDRAWN`. La relecture par le propriétaire dans
 `refuse une candidature déjà traitée ou retirée (%i, %s)` comparerait alors le statut
 observé au statut attendu et ferait échouer le test. Nous n’avons pas provoqué ce défaut.
+## 7. Consommation IA
+
+- Crédits au début de la séance :18 % utilisés.
+- Crédits à la fin de la séance :27 % utilisés.
+- Consommation :9 points de pourcentage.
+(Kevin Akator)

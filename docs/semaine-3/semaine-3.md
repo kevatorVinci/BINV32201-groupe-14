@@ -1,5 +1,7 @@
 # Bilan — Semaine 3 : guider et vérifier
 
+[Consulter les matrices interactives](./matrices.html)
+
 ## 1. Inventaire des guides et des senseurs
 
 Les guides et configurations ont été lus par Copilot. Les contrôles ont été distingués
@@ -199,6 +201,6 @@ observé au statut attendu et ferait échouer le test. Nous n’avons pas provoq
 ## 7. Consommation IA
 
 - Crédits au début de la séance :18 % utilisés.
-- Crédits à la fin de la séance :27 % utilisés.
-- Consommation :9 points de pourcentage.
+- Crédits à la fin de la séance :29 % utilisés.
+- Consommation :11 points de pourcentage.
 (Kevin Akator)

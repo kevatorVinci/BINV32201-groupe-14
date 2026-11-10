@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Semaine 3 — Matrices de traçabilité du harnais agentique</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2933;
+      --muted: #52606d;
+      --line: #cbd5e1;
+      --paper: #ffffff;
+      --wash: #f1f5f9;
+      --accent: #185abc;
+      --accent-dark: #123f82;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--wash);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    header, main { max-width: 1500px; margin: auto; }
+    header { padding: 2rem 1rem 1rem; }
+    h1 { margin: 0 0 .5rem; font-size: clamp(1.6rem, 3vw, 2.4rem); }
+    h2 { margin-top: 2rem; }
+    h3 { margin-top: 0; }
+    .intro, .panel, .table-wrap {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: .5rem;
+    }
+    .intro { padding: 1rem 1.25rem; }
+    .muted, .limit { color: var(--muted); }
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: .75rem; align-items: end;
+      margin: 1rem 0;
+    }
+    label { display: grid; gap: .25rem; font-weight: 650; }
+    input, select, button {
+      min-height: 2.5rem; border: 1px solid #8795a1; border-radius: .35rem;
+      background: #fff; color: var(--ink); padding: .45rem .65rem; font: inherit;
+    }
+    input { min-width: min(30rem, 80vw); }
+    button { cursor: pointer; font-weight: 650; }
+    button:hover, button:focus-visible { background: #e8f0fe; }
+    button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid #f59e0b; outline-offset: 2px;
+    }
+    .tabs { display: flex; gap: .5rem; margin-top: 1rem; }
+    .tab[aria-selected="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .count { margin: .25rem 0 1rem; font-weight: 700; }
+    .table-wrap { overflow-x: auto; margin: 1rem 0 1.5rem; }
+    table { border-collapse: collapse; width: 100%; min-width: 1000px; }
+    caption { text-align: left; padding: 1rem; font-size: 1.2rem; font-weight: 750; }
+    th, td { border-top: 1px solid var(--line); padding: .7rem; vertical-align: top; text-align: left; }
+    th { background: #e8eef5; }
+    tr[data-hidden="true"] { display: none; }
+    code { background: #eef2f7; border-radius: .2rem; padding: .08rem .25rem; }
+    details { margin-top: .45rem; }
+    summary { cursor: pointer; color: var(--accent-dark); font-weight: 650; }
+    a { color: var(--accent-dark); }
+    .status { font-weight: 700; }
+    footer { max-width: 1500px; margin: 0 auto; padding: 1rem; }
+    @media (max-width: 650px) {
+      header { padding-top: 1rem; }
+      .toolbar { align-items: stretch; flex-direction: column; }
+      input { min-width: 0; width: 100%; }
+    }
+    @media print {
+      body { background: #fff; }
+      .toolbar, .tabs, footer { display: none; }
+      .tab-panel { display: block; }
+      .intro, .table-wrap { border: 0; }
+      table { min-width: 0; font-size: 10px; }
+      details > *:not(summary) { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Semaine 3 — Matrices de traçabilité du harnais agentique</h1>
+    <div class="intro">
+      <p>Cette page réorganise les constats du <a href="./semaine-3.md">bilan de séance</a>
+        pour rendre visibles les sources, les statuts, les preuves et leurs limites.
+        Elle ne crée aucune exigence ni preuve supplémentaire.</p>
+      <p class="muted">Les lectures des guides, tests et supports Web 2 ont été réalisées
+        par Copilot. Les vérifications personnelles du groupe sont limitées aux éléments
+        indiqués dans le bilan. Les sources Web 2 exigent Internet.</p>
+    </div>
+    <nav class="tabs" aria-label="Matrices">
+      <button class="tab" id="tab-a" aria-selected="true" aria-controls="panel-a">A. Guides, senseurs et Web 2</button>
+      <button class="tab" id="tab-b" aria-selected="false" aria-controls="panel-b">B. Exigences → tests</button>
+    </nav>
+    <div class="toolbar" aria-label="Recherche et filtres">
+      <label>Rechercher
+        <input id="search" type="search" placeholder="Identifiant, source, mot-clé…" autocomplete="off">
+      </label>
+      <label>Filtrer par catégorie
+        <select id="category"><option value="">Toutes</option></select>
+      </label>
+      <label>Filtrer par statut
+        <select id="status"><option value="">Tous</option></select>
+      </label>
+      <button id="reset" type="button">Réinitialiser</button>
+      <button id="print" type="button">Imprimer</button>
+    </div>
+    <p id="count" class="count" aria-live="polite"></p>
+  </header>
+
+  <main>
+    <section id="panel-a" class="tab-panel active" role="tabpanel" aria-labelledby="tab-a">
+      <h2>Guides, senseurs et Web 2</h2>
+      <div class="table-wrap">
+        <table data-matrix="a1">
+          <caption>A1 — Inventaire</caption>
+          <thead><tr><th>ID</th><th>Mécanisme et emplacement</th><th>Guide / Senseur / Autre</th><th>Inférentiel / Computationnel / Non applicable</th><th>Rôle et exemple exact</th><th>État</th><th>Preuve et limite</th></tr></thead>
+          <tbody>
+            <tr data-category="guide" data-status="lu"><td>G001</td><td><a href="../../.github/copilot-instructions.md">Instructions Copilot</a></td><td>Guide</td><td>Inférentiel</td><td>Architecture et conventions. Exemple : le jeton est envoyé directement dans <code>Authorization</code>, sans <code>Bearer</code>.</td><td class="status">Lu</td><td><details><summary>Preuve</summary><p>Guide, ligne 47. Passage personnellement vérifié selon le bilan. Ce guide oriente le travail ; il ne constitue pas un test exécuté.</p></details></td></tr>
+            <tr data-category="guide" data-status="lu"><td>G002</td><td><a href="../architecture.md">Architecture</a></td><td>Guide</td><td>Inférentiel</td><td>Responsabilités séparées : controllers → services → repositories → SQLite ; pages → hooks → services ou utils → models.</td><td class="status">Lu</td><td><details><summary>Preuve</summary><p>Sections Backend et Frontend, notamment les tableaux de responsabilités. Documentation descriptive, non contrôle automatique.</p></details></td></tr>
+            <tr data-category="guide" data-status="lu"><td>G003</td><td><a href="../cdc_gesta_developpement.md">Cahier des charges</a></td><td>Guide métier</td><td>Inférentiel</td><td>EF-32, EF-33 et RG-03 : candidature publiée, retrait avant traitement, consultation et statuts.</td><td class="status">Lu</td><td><details><summary>Preuve</summary><p>EF-32 ligne 205, EF-33 ligne 206, RG-03 ligne 139. Source des exigences, pas un résultat de test.</p></details></td></tr>
+            <tr data-category="guide" data-status="lu"><td>G004</td><td><a href="../../backend/API.md">Contrat API</a></td><td>Guide</td><td>Inférentiel</td><td>Routes, DTO et erreurs, par exemple <code>PATCH /applications/:id/withdraw</code>.</td><td class="status">Lu</td><td><details><summary>Preuve</summary><p>Sections candidatures. Une phrase obsolète sur le retrait demeure ; elle est signalée, non corrigée.</p></details></td></tr>
+            <tr data-category="guide" data-status="lu"><td>G005</td><td><a href="../semaine-2/semaine-2.md">Bilan de semaine 2</a></td><td>Guide de séance</td><td>Inférentiel</td><td>Choix du projet : doublons autorisés et recandidature après retrait.</td><td class="status">Lu</td><td><details><summary>Limite</summary><p>Ces décisions propres au projet ne sont pas des exigences supplémentaires du cahier des charges.</p></details></td></tr>
+            <tr data-category="guide" data-status="lu"><td>G006</td><td><a href="../../.github/pull_request_template.md">Template de pull request</a></td><td>Guide de processus</td><td>Inférentiel</td><td>Rappelle les validations, la documentation API, les tests et le navigateur à considérer.</td><td class="status">Lu</td><td><details><summary>Limite</summary><p>Une checklist de processus n'est pas la preuve que chaque contrôle a été exécuté.</p></details></td></tr>
+            <tr data-category="senseur" data-status="lu et exécuté"><td>G007</td><td><a href="../../backend/tests/applications.test.ts">Tests backend</a></td><td>Senseur</td><td>Computationnel</td><td>Vitest/Supertest sur application assemblée et SQLite en mémoire.</td><td class="status">Lu et exécuté : 32 tests réussis</td><td><details><summary>Preuve</summary><p>Commande ciblée : <code>npm run test -w backend -- tests/applications.test.ts</code>. La sortie conservée indique 1 fichier et 32 tests réussis.</p></details></td></tr>
+            <tr data-category="senseur" data-status="exécuté via check"><td>G008</td><td><code>frontend/tests/</code>, Oxlint, TypeScript, builds</td><td>Senseurs</td><td>Computationnel</td><td>Contrôles frontend, lint, types et compilation.</td><td class="status">Exécuté via <code>npm run check</code></td><td><details><summary>Limite</summary><p>Réussite confirmée par l'utilisateur ; sortie détaillée et nombres non conservés.</p></details></td></tr>
+            <tr data-category="orchestrateur" data-status="lu et exécuté"><td>G009</td><td><a href="../../package.json">Script racine <code>check</code></a></td><td>Autre — orchestrateur</td><td>Computationnel</td><td><code>npm run lint &amp;&amp; npm run typecheck &amp;&amp; npm run test &amp;&amp; npm run build</code>.</td><td class="status">Lu ; exécuté, réussite confirmée</td><td><details><summary>Limite</summary><p>Le script lance des senseurs ; il n'est pas un senseur supplémentaire.</p></details></td></tr>
+            <tr data-category="configuration" data-status="lu"><td>G010</td><td><a href="../../frontend/vite.config.ts">Proxy Vite</a></td><td>Autre — configuration d'exécution</td><td>Non applicable</td><td>Transmet <code>/api/...</code> et retire le préfixe <code>/api</code>.</td><td class="status">Lu</td><td><details><summary>Limite</summary><p>Transmettre une requête ne vérifie pas son résultat ; ce n'est pas un senseur.</p></details></td></tr>
+            <tr data-category="configuration" data-status="lu"><td>G011</td><td><code>.vscode/settings.json</code> et <code>.npmrc</code></td><td>Autre — permissions / installation</td><td>Non applicable</td><td>Permissions de commandes et <code>ignore-scripts=true</code>.</td><td class="status">Lu</td><td><details><summary>Limite</summary><p>Configuration d'environnement, pas guide de qualité ni contrôle exécuté.</p></details></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table data-matrix="a2">
+          <caption>A2 — Attentes Web 2 → guides</caption>
+          <thead><tr><th>ID</th><th>Attente ou notion</th><th>Source Web 2 : chapitre, repère, extrait et lien</th><th>Guide examiné et extrait</th><th>Correspondance</th><th>Justification et recommandation</th></tr></thead>
+          <tbody>
+            <tr data-category="web2" data-status="oui"><td>W001</td><td>Organisation React/Vite</td><td><a href="https://github.com/e-vinci/BINV2150A-slides/blob/a680f0b38ee1a04e30374315792404f91d799702/seance-07/slides.md#L65-L85">Séance 07, structure, lignes 65–85</a><br><q>structure du projet</q></td><td><a href="../architecture.md#L84">architecture.md, lignes 84–99</a><br><q>pages → hooks → services ou utils → models</q></td><td class="status">Oui</td><td>Le guide décrit les dossiers et responsabilités ; organisation compatible, sans nouvelle obligation.</td></tr>
+            <tr data-category="web2" data-status="oui"><td>W002</td><td>Composants séparés</td><td><a href="https://github.com/e-vinci/BINV2150A-slides/blob/a680f0b38ee1a04e30374315792404f91d799702/seance-07/slides.md#L270-L283">Séance 07, lignes 270–283</a><br><q>Un fichier par composant dès qu'il est réutilisé ailleurs ou qu'il devient long</q></td><td><a href="../../.github/copilot-instructions.md#L30">copilot-instructions.md, ligne 30</a><br><q>pages compose hooks and components</q></td><td class="status">Oui</td><td>Le dépôt décrit une organisation compatible.</td></tr>
+            <tr data-category="web2" data-status="oui"><td>W003</td><td>Type guards</td><td><a href="https://github.com/e-vinci/BINV2150A-slides/blob/a680f0b38ee1a04e30374315792404f91d799702/seance-01/slides.md#L72-L82">Séance 01, lignes 72–82</a><br>Notion de validation de forme</td><td><a href="../../.github/copilot-instructions.md#L30">copilot-instructions.md, ligne 30</a><br><q>validate JSON with type guards</q></td><td class="status">Oui</td><td>Notion enseignée par Web 2 ; convention explicite dans le guide du dépôt.</td></tr>
+            <tr data-category="web2" data-status="oui"><td>W004</td><td>HTTP/REST et statuts</td><td><a href="https://github.com/e-vinci/BINV2150A-slides/blob/a680f0b38ee1a04e30374315792404f91d799702/seance-02/slides.md#L14-L30">Séance 02, lignes 14–30</a><br><q>Verbes HTTP : GET, POST, PUT, PATCH, DELETE</q></td><td><a href="../../backend/API.md#L20">API.md, lignes 20–36</a><br>Codes d'erreur documentés</td><td class="status">Oui</td><td>Le projet ajoute 409 pour un conflit métier, ce qui reste compatible avec l'usage HTTP.</td></tr>
+            <tr data-category="web2" data-status="partielle"><td>W005</td><td>Documentation API</td><td><a href="https://github.com/e-vinci/BINV2150A-slides/blob/a680f0b38ee1a04e30374315792404f91d799702/seance-02/slides.md#L406-L408">Séance 02, lignes 406–408</a><br><q>créez un fichier API.md pour documenter l'API REST</q></td><td><a href="../../.github/copilot-instructions.md#L45">copilot-instructions.md, ligne 45</a><br><q>update backend/API.md</q></td><td class="status">Partielle</td><td>Consigne de maintenance présente, mais incohérences internes dans README.md et API.md à corriger ultérieurement.</td></tr>
+            <tr data-category="web2" data-status="oui"><td>W006</td><td>Validation frontend/backend</td><td><a href="https://github.com/e-vinci/BINV2150A-slides/blob/a680f0b38ee1a04e30374315792404f91d799702/seance-12/slides.md#L281-L303">Séance 12, lignes 281–303</a><br><q>La validation du frontend ... ne remplace pas celle du backend</q></td><td><a href="../../.github/copilot-instructions.md#L25">copilot-instructions.md, lignes 25–27</a><br>Validation HTTP dans les controllers</td><td class="status">Oui</td><td>La validation des entrées est distincte de l'autorisation ; les tests frontend simulés ne prouvent pas le serveur.</td></tr>
+            <tr data-category="web2" data-status="oui"><td>W007</td><td>Authentification et autorisation</td><td><a href="https://github.com/e-vinci/BINV2150A-slides/blob/a680f0b38ee1a04e30374315792404f91d799702/seance-03/slides.md#L300-L360">Séance 03, lignes 300–360</a><br><q>Vérifier le token avant d'accéder à une route protégée</q></td><td><a href="../../.github/copilot-instructions.md#L29">copilot-instructions.md, ligne 29</a><br><q>authenticate establishes req.user; authorize applies named permission rules</q></td><td class="status">Oui</td><td>Le dépôt adapte le modèle au mode démo et relit les droits en base.</td></tr>
+            <tr data-category="web2" data-status="oui"><td>W008</td><td>Proxy et same-origin</td><td><a href="https://github.com/e-vinci/BINV2150A-slides/blob/a680f0b38ee1a04e30374315792404f91d799702/seance-22/slides.md#L190-L240">Séance 22, lignes 190–240</a><br><q>Le serveur de développement de Vite joue le rôle de proxy</q></td><td><a href="../../frontend/vite.config.ts#L12">vite.config.ts, lignes 12–19</a><br>proxy <code>/api</code></td><td class="status">Oui</td><td>Configuration d'exécution, pas senseur.</td></tr>
+            <tr data-category="web2" data-status="non applicable"><td>W009</td><td>Hachage salé des mots de passe</td><td><a href="https://github.com/e-vinci/BINV2150A-slides/blob/a680f0b38ee1a04e30374315792404f91d799702/seance-04/slides.md#L14-L39">Séance 04, lignes 14–39</a><br><q>on stocke un hash du mot de passe</q></td><td><a href="../../README.md#L119">README.md, lignes 119–126</a><br>mode démo sans mot de passe</td><td class="status">Non applicable</td><td>Le support concerne une autre stratégie d'authentification ; aucune contradiction démontrée.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="panel-b" class="tab-panel" role="tabpanel" aria-labelledby="tab-b" hidden>
+      <h2>Exigences → tests</h2>
+      <div class="table-wrap">
+        <table data-matrix="b">
+          <caption>B — Traçabilité des exigences, choix et contrôles</caption>
+          <thead><tr><th>ID</th><th>Exigence ou décision source</th><th>Nature</th><th>Cas précis et résultat attendu</th><th>Test : fichier et nom exact</th><th>Assertions utiles</th><th>Couverture</th><th>Justification et limites</th><th>Exécution connue</th></tr></thead>
+          <tbody>
+            <tr data-category="exigence" data-status="couvert"><td>T001</td><td><a href="../cdc_gesta_developpement.md#L205">EF-32</a></td><td>Exigence</td><td>Candidater à une offre publiée sans message ; création en <code>IN_PROGRESS</code>.</td><td><a href="../../backend/tests/applications.test.ts#L60">applications.test.ts:60</a><br><q>crée une candidature à une offre publiée sans message</q></td><td><code>201</code> et DTO complet égal : id, offre, <code>message: null</code>, statut, date.</td><td class="status">Couvert</td><td>La réponse et le DTO sont vérifiés ; la persistance indépendante n'est pas relue.</td><td>32 tests backend ciblés réussis.</td></tr>
+            <tr data-category="exigence" data-status="couvert"><td>T002</td><td><a href="../cdc_gesta_developpement.md#L205">EF-32</a></td><td>Exigence</td><td>Candidater avec message facultatif ; message trimé conservé.</td><td><a href="../../backend/tests/applications.test.ts#L75">applications.test.ts:75</a><br><q>conserve le message facultatif après suppression des espaces autour</q></td><td><code>201</code> et message égal à <q>Mon message de candidature</q>.</td><td class="status">Couvert</td><td>Preuve API ; le succès UI sans message reste non testé.</td><td>32 tests backend ciblés réussis.</td></tr>
+            <tr data-category="exigence" data-status="couvert"><td>T003</td><td><a href="../cdc_gesta_developpement.md#L139">RG-03 / D-07</a></td><td>Exigence</td><td>Refuser une offre non publiée : <code>409</code> et <code>OFFER_NOT_PUBLISHED</code>.</td><td><a href="../../backend/tests/applications.test.ts#L105">applications.test.ts:105</a><br><q>refuse une offre non publiée %i (409)</q></td><td>Statut HTTP et code d'erreur.</td><td class="status">Couvert</td><td>Le refus est prouvé ; l'absence de modification n'est pas applicable à cette création refusée.</td><td>32 tests backend ciblés réussis.</td></tr>
+            <tr data-category="contrôle" data-status="couvert"><td>T004</td><td>EF-32 / autorisation</td><td>Contrôle transversal</td><td>Refuser les rôles administrateur et contact : <code>403</code>, <code>FORBIDDEN</code>.</td><td><a href="../../backend/tests/applications.test.ts#L38">applications.test.ts:38</a><br><q>refuse la candidature pour %s (403)</q></td><td>Statut et code pour les deux rôles.</td><td class="status">Couvert</td><td>Preuve serveur ; le test UI ne prouve que la visibilité.</td><td>32 tests backend ciblés réussis.</td></tr>
+            <tr data-category="choix" data-status="couvert"><td>T005</td><td>Semaine 2, ligne 8</td><td>Choix du projet</td><td>Autoriser plusieurs candidatures du même étudiant pour la même offre.</td><td><a href="../../backend/tests/applications.test.ts#L85">applications.test.ts:85</a><br><q>autorise plusieurs candidatures en cours du même étudiant pour la même offre</q></td><td>Deux réponses <code>201</code> et identifiants distincts.</td><td class="status">Couvert</td><td>Choix documenté, pas exigence autonome du cahier des charges.</td><td>32 tests backend ciblés réussis.</td></tr>
+            <tr data-category="choix" data-status="couvert"><td>T006</td><td>Semaine 2, ligne 8</td><td>Choix du projet</td><td>Après retrait, recandidater à la même offre.</td><td><a href="../../backend/tests/applications.test.ts#L200">applications.test.ts:200</a><br><q>retire une candidature en cours et permet ensuite de recandidater</q></td><td>DTO <code>WITHDRAWN</code>, relecture du statut, puis nouvelle réponse <code>201</code>.</td><td class="status">Couvert</td><td>Le statut est relu via GET ; la seconde candidature est seulement vérifiée par son statut HTTP.</td><td>32 tests backend ciblés réussis.</td></tr>
+            <tr data-category="exigence" data-status="couvert"><td>T007</td><td><a href="../cdc_gesta_developpement.md#L206">EF-33</a></td><td>Exigence</td><td>Consulter uniquement ses candidatures.</td><td><a href="../../backend/tests/applications.test.ts#L137">applications.test.ts:137</a><br><q>retourne uniquement les candidatures de l'étudiant connecté</q></td><td>Égalité exacte avec le tableau de Lucas.</td><td class="status">Couvert</td><td>Preuve d'isolation API ; aucun test frontend équivalent n'est nécessaire pour établir la protection serveur.</td><td>32 tests backend ciblés réussis.</td></tr>
+            <tr data-category="exigence" data-status="couvert"><td>T008</td><td><a href="../cdc_gesta_developpement.md#L206">EF-33</a></td><td>Exigence</td><td>Consulter les quatre statuts attendus.</td><td><a href="../../backend/tests/applications.test.ts#L156">applications.test.ts:156</a><br><q>expose le statut %s de la candidature</q></td><td>Recherche et comparaison de <code>IN_PROGRESS</code>, <code>SELECTED</code>, <code>REJECTED</code>, <code>WITHDRAWN</code>.</td><td class="status">Couvert</td><td>Les tests frontend associés ne prouvent que les libellés avec réponses simulées.</td><td>32 tests backend ciblés réussis.</td></tr>
+            <tr data-category="exigence" data-status="couvert"><td>T009</td><td>EF-33</td><td>Exigence</td><td>Un étudiant sans candidature reçoit une liste vide.</td><td><a href="../../backend/tests/applications.test.ts#L168">applications.test.ts:168</a><br><q>retourne une liste vide à un étudiant sans candidature</q></td><td>Statut <code>200</code> et tableau vide.</td><td class="status">Couvert</td><td>La réponse de liste est effectivement vérifiée.</td><td>32 tests backend ciblés réussis.</td></tr>
+            <tr data-category="exigence" data-status="couvert"><td>T010</td><td>EF-32</td><td>Exigence</td><td>Retirer sa candidature encore en cours ; elle reste avec <code>WITHDRAWN</code>.</td><td><a href="../../backend/tests/applications.test.ts#L200">applications.test.ts:200</a></td><td><code>200</code>, DTO exact, relecture <code>WITHDRAWN</code> et recandidature <code>201</code>.</td><td class="status">Couvert</td><td>La modification effective est vérifiée par relecture API.</td><td>32 tests backend ciblés réussis.</td></tr>
+            <tr data-category="exigence" data-status="couvert"><td>T011</td><td>EF-32</td><td>Exigence</td><td>Refuser le retrait de <code>SELECTED</code>, <code>REJECTED</code> et <code>WITHDRAWN</code> : <code>409</code>, code attendu, statut inchangé.</td><td><a href="../../backend/tests/applications.test.ts#L276">applications.test.ts:276</a><br><q>refuse une candidature déjà traitée ou retirée (%i, %s)</q></td><td><code>409</code>, <code>APPLICATION_NOT_WITHDRAWABLE</code>, puis statut propriétaire égal au statut initial.</td><td class="status">Couvert</td><td>La relecture ferait échouer un serveur qui refuserait mais modifierait malgré tout la candidature.</td><td>32 tests backend ciblés réussis.</td></tr>
+            <tr data-category="contrôle" data-status="couvert"><td>T012</td><td>EF-32 / autorisation</td><td>Contrôle transversal</td><td>Refuser le retrait par administrateur et contact : <code>403</code>, sans modification.</td><td><a href="../../backend/tests/applications.test.ts#L230">applications.test.ts:230</a><br><q>refuse le retrait par %s (403)</q></td><td><code>403</code>, <code>FORBIDDEN</code>, puis statut propriétaire <code>IN_PROGRESS</code>.</td><td class="status">Couvert</td><td>Les deux rôles sont paramétrés ; aucun test frontend dédié.</td><td>32 tests backend ciblés réussis.</td></tr>
+            <tr data-category="contrôle" data-status="couvert"><td>T013</td><td>EF-32 / isolation</td><td>Contrôle transversal</td><td>Refuser le retrait par un autre étudiant : <code>404</code>, <code>NOT_FOUND</code>, sans modification.</td><td><a href="../../backend/tests/applications.test.ts#L250">applications.test.ts:250</a><br><q>ne révèle pas une candidature appartenant à un autre étudiant (404)</q></td><td><code>404</code>, <code>NOT_FOUND</code>, puis relecture du propriétaire avec statut <code>IN_PROGRESS</code>.</td><td class="status">Couvert</td><td>Preuve serveur complète pour ce cas ; les réponses frontend simulées ont une portée différente.</td><td>32 tests backend ciblés réussis.</td></tr>
+            <tr data-category="contrôle" data-status="couvert"><td>T014</td><td>Contrôles transversaux</td><td>Contrôle transversal</td><td>Session absente et identifiant invalide refusés.</td><td><a href="../../backend/tests/applications.test.ts#L223">applications.test.ts:223</a> et <a href="../../backend/tests/applications.test.ts#L265">:265</a></td><td><code>401</code> ; <code>400</code> et <code>INVALID_QUERY</code>.</td><td class="status">Couvert</td><td>Cas de garde API ; ils ne démontrent pas les parcours métier positifs.</td><td>32 tests backend ciblés réussis.</td></tr>
+            <tr data-category="frontend" data-status="partiel"><td>T015</td><td>EF-32 / EF-33</td><td>Contrôle transversal</td><td>Afficher les statuts, l'état vide, les erreurs et l'action de retrait dans l'interface.</td><td><a href="../../frontend/tests/MyApplicationsPage.test.tsx#L54">MyApplicationsPage.test.tsx</a> ; <a href="../../frontend/tests/OffersPage.test.tsx#L99">OffersPage.test.tsx</a></td><td>Libellés français, état vide, erreurs, appels simulés et <code>onUnauthorized</code>.</td><td class="status">Partiel</td><td>Tests frontend avec réponses simulées : ils ne prouvent ni l'autorisation ni l'isolation serveur. Le succès UI sans message reste absent.</td><td>Exécuté via <code>npm run check</code>, réussite confirmée ; détail non conservé.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="limit"><strong>Limites :</strong> aucun essai navigateur n'est confirmé ; les sources Web 2 n'ont pas fait l'objet d'une vérification personnelle confirmée ; le senseur d'architecture optionnel n'a pas été réalisé.</p>
+    </section>
+  </main>
+  <footer>
+    <p><a href="./semaine-3.md">Retour au bilan Markdown</a> ·
+      <a href="../../backend/tests/applications.test.ts">Ouvrir les tests backend</a> ·
+      <a href="../cdc_gesta_developpement.md">Ouvrir le cahier des charges</a></p>
+  </footer>
+  <script>
+    (() => {
+      const tabs = [...document.querySelectorAll(".tab")];
+      const panels = [...document.querySelectorAll(".tab-panel")];
+      const search = document.querySelector("#search");
+      const category = document.querySelector("#category");
+      const status = document.querySelector("#status");
+      const count = document.querySelector("#count");
+      const reset = document.querySelector("#reset");
+      const rows = [...document.querySelectorAll("tbody tr")];
+      let activePanel = document.querySelector(".tab-panel.active");
+
+      function values(attribute) {
+        return [...new Set([...activePanel.querySelectorAll("tbody tr")].map((row) => row.dataset[attribute]).filter(Boolean))].sort();
+      }
+      function refill(select, attribute, label) {
+        const selected = select.value;
+        select.innerHTML = `<option value="">${label}</option>`;
+        values(attribute).forEach((value) => {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = value[0].toUpperCase() + value.slice(1);
+          select.append(option);
+        });
+        select.value = values(attribute).includes(selected) ? selected : "";
+      }
+      function filter() {
+        const needle = search.value.trim().toLocaleLowerCase("fr");
+        let visible = 0;
+        activePanel.querySelectorAll("tbody tr").forEach((row) => {
+          const matches = (!needle || row.textContent.toLocaleLowerCase("fr").includes(needle))
+            && (!category.value || row.dataset.category === category.value)
+            && (!status.value || row.dataset.status === status.value);
+          row.dataset.hidden = String(!matches);
+          if (matches) visible += 1;
+        });
+        count.textContent = `${visible} ligne${visible === 1 ? "" : "s"} visible${visible === 1 ? "" : "s"} dans l’onglet actif`;
+      }
+      function switchTab(button) {
+        tabs.forEach((tab) => {
+          const selected = tab === button;
+          tab.setAttribute("aria-selected", String(selected));
+          tab.tabIndex = selected ? 0 : -1;
+        });
+        panels.forEach((panel) => {
+          const selected = panel.id === button.getAttribute("aria-controls");
+          panel.classList.toggle("active", selected);
+          panel.hidden = !selected;
+          if (selected) activePanel = panel;
+        });
+        refill(category, "category", "Toutes");
+        refill(status, "status", "Tous");
+        filter();
+      }
+      tabs.forEach((tab, index) => {
+        tab.addEventListener("click", () => switchTab(tab));
+        tab.addEventListener("keydown", (event) => {
+          if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+            event.preventDefault();
+            tabs[(index + (event.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length].focus();
+          }
+        });
+      });
+      [search, category, status].forEach((control) => control.addEventListener("input", filter));
+      reset.addEventListener("click", () => {
+        search.value = "";
+        category.value = "";
+        status.value = "";
+        filter();
+        search.focus();
+      });
+      document.querySelector("#print").addEventListener("click", () => window.print());
+      refill(category, "category", "Toutes");
+      refill(status, "status", "Tous");
+      filter();
+    })();
+  </script>
+</body>
+</html>

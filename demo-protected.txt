@@ -1,0 +1,1 @@
+Ce fichier sert au test du hook tool-guardian.

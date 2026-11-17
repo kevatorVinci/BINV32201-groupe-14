@@ -49,6 +49,14 @@ Gesta is an npm-workspaces application with a React/Vite frontend, an Express/Ty
 - When changing permissions, update both backend authorization and frontend visibility only as a UX optimization; the backend remains the source of truth. Re-read authenticated roles and company membership from SQLite rather than trusting the token or client state.
 - For changes submitted through a pull request, follow `.github/pull_request_template.md`, including validation, permissions, API/HTTP documentation, migration, browser-testing, and conversation-export checklist items that apply.
 
+
+Pour tout ajout de fonctionnalité ou correction de bug, lis et applique
+.github/skills/test-driven-development/SKILL.md avant de modifier le code
+de l’application. Écris et exécute les tests d’abord, présente-les, puis attends
+leur validation explicite avant l’implémentation. Cette règle ne concerne pas les
+demandes d’explication ou de documentation seules.
+
+
 ## Reference Documentation
 
 - [README.md](../README.md) — setup, commands, supported Node versions, current scope, and troubleshooting.

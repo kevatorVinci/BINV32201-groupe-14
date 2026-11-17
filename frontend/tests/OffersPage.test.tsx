@@ -65,6 +65,89 @@ describe("OffersPage", () => {
     expect(await screen.findByText("Aucune offre à afficher.")).toBeInTheDocument();
   });
 
+  it("recherche une expression entière sans tenir compte de la casse ni des espaces extérieurs", async () => {
+    stubFetch({
+      "/api/offers": () =>
+        Response.json([
+          {
+            ...offers[0],
+            title: "Assistant conversationnel interne",
+            status: "PUBLISHED",
+          },
+          {
+            ...offers[0],
+            id: 8,
+            title: "Assistant conversationnel externe",
+            status: "PUBLISHED",
+          },
+          {
+            ...offers[0],
+            id: 9,
+            title: "Assistant interne conversationnel",
+            status: "PUBLISHED",
+          },
+        ]),
+    });
+
+    render(<OffersPage user={studentUser} token="jeton" onUnauthorized={vi.fn()} />);
+    const searchInput = screen.getByRole("searchbox", { name: "Rechercher une offre" });
+
+    fireEvent.change(searchInput, { target: { value: "  CONVERSATIONNEL INTERNE  " } });
+
+    expect(await screen.findByText("Assistant conversationnel interne")).toBeInTheDocument();
+    expect(screen.queryByText("Assistant conversationnel externe")).not.toBeInTheDocument();
+    expect(screen.queryByText("Assistant interne conversationnel")).not.toBeInTheDocument();
+  });
+
+  it("affiche toutes les offres pour une recherche vide et un message sans correspondance", async () => {
+    stubFetch({ "/api/offers": () => Response.json(offers) });
+
+    render(<OffersPage user={contactUser} token="jeton" onUnauthorized={vi.fn()} />);
+    const searchInput = screen.getByRole("searchbox", { name: "Rechercher une offre" });
+
+    expect(await screen.findByText("Refonte du portail client")).toBeInTheDocument();
+    expect(screen.getByText("Tableau de bord de qualité des données")).toBeInTheDocument();
+
+    fireEvent.change(searchInput, { target: { value: "   " } });
+    expect(screen.getByText("Refonte du portail client")).toBeInTheDocument();
+    expect(screen.getByText("Tableau de bord de qualité des données")).toBeInTheDocument();
+
+    fireEvent.change(searchInput, { target: { value: "offre introuvable" } });
+
+    expect(await screen.findByText("Aucune offre ne correspond à votre recherche.")).toBeInTheDocument();
+    expect(screen.queryByText("Refonte du portail client")).not.toBeInTheDocument();
+    expect(screen.queryByText("Tableau de bord de qualité des données")).not.toBeInTheDocument();
+  });
+
+  it("combine la recherche avec le filtre par période", async () => {
+    const p1Offer = { ...offers[0], title: "Assistant en cuisine", period: "P1", status: "PUBLISHED" };
+    const p2Offer = {
+      ...offers[0],
+      id: 8,
+      title: "Assistant de direction",
+      period: "P2",
+      status: "PUBLISHED",
+    };
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const url = String(input);
+      return Promise.resolve(Response.json(url.endsWith("?period=P2") ? [p2Offer] : [p1Offer, p2Offer]));
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<OffersPage user={studentUser} token="jeton" onUnauthorized={vi.fn()} />);
+    const searchInput = screen.getByRole("searchbox", { name: "Rechercher une offre" });
+    expect(await screen.findByText("Assistant en cuisine")).toBeInTheDocument();
+    expect(screen.getByText("Assistant de direction")).toBeInTheDocument();
+
+    fireEvent.change(searchInput, { target: { value: "assistant" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "Période" }), { target: { value: "P2" } });
+
+    expect(await screen.findByText("Assistant de direction")).toBeInTheDocument();
+    await waitFor(() => expect(fetchMock).toHaveBeenLastCalledWith("/api/offers?period=P2", expect.anything()));
+    expect(searchInput).toHaveValue("assistant");
+    expect(screen.queryByText("Assistant en cuisine")).not.toBeInTheDocument();
+  });
+
   it("adapte la description au profil", async () => {
     stubFetch({ "/api/offers": () => Response.json([]) });
 
@@ -86,6 +169,45 @@ describe("OffersPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("statut 403");
   });
+
+  it("permet de candidater sans message et affiche la confirmation", async () => {
+  const fetchMock = stubFetch({
+    "/api/offers": () =>
+      Response.json([
+        {
+          id: 7,
+          title: "Assistant conversationnel interne",
+          companyShortName: "Nexalis",
+          academicYear: "2026-2027",
+          period: "P2",
+          status: "PUBLISHED",
+        },
+      ]),
+    "/api/applications": () =>
+      Response.json(
+        {
+          id: 20,
+          offerId: 7,
+          message: null,
+          status: "IN_PROGRESS",
+          appliedAt: "2026-11-03 14:30:00",
+        },
+        { status: 201 },
+      ),
+  });
+
+  render(<OffersPage user={studentUser} token="jeton" onUnauthorized={vi.fn()} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Candidater" }));
+
+  expect(await screen.findByRole("status")).toHaveTextContent("Candidature envoyée.");
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/api/applications",
+    expect.objectContaining({
+      method: "POST",
+      body: JSON.stringify({ offerId: 7 }),
+    }),
+  );
+});
 
   it("signale une session expirée", async () => {
     stubFetch({ "/api/offers": () => new Response(null, { status: 401 }) });

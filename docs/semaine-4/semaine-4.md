@@ -71,3 +71,25 @@ Aucun test n'a échoué.
 
 Conclusion
 Le nouveau test ne révèle aucun défaut dans l'implémentation actuelle. Il améliore néanmoins la couverture des tests en protégeant explicitement le scénario de candidature sans message avec une réponse de succès (201). Cela réduit le risque de régression future sur ce comportement.
+
+
+
+Recherche d'offres (EF-30)
+La fonctionnalité a été développée en suivant une approche TDD.
+
+Des tests ont d'abord été ajoutés pour définir le comportement attendu de la recherche. Ces tests ont été exécutés avant l'implémentation et ont échoué, ce qui a confirmé l'absence de la fonctionnalité. Après validation des tests, l'implémentation a été réalisée puis les tests ont été rejoués avec succès.
+
+La recherche :
+
+filtre les offres à partir du titre ;
+ignore les différences entre majuscules et minuscules ;
+ignore les espaces au début et à la fin de la recherche ;
+affiche toutes les offres accessibles lorsque la recherche est vide ;
+affiche un message adapté lorsqu'aucune offre ne correspond ;
+fonctionne conjointement avec le filtre par période ;
+conserve les règles de visibilité existantes pour les étudiants.
+Validation
+Les vérifications suivantes ont été exécutées avec succès :
+
+npm test
+npm run check

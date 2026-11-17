@@ -3,6 +3,7 @@ import EmptyState from "../components/EmptyState.tsx";
 import ErrorState from "../components/ErrorState.tsx";
 import LoadingState from "../components/LoadingState.tsx";
 import OfferTable from "../components/OfferTable.tsx";
+import SearchField from "../components/SearchField.tsx";
 import { useOffers } from "../hooks/useOffers.ts";
 import { useApplyToOffer } from "../hooks/useApplyToOffer.ts";
 import type { PeriodCode } from "../models/offer.ts";
@@ -32,19 +33,38 @@ const isPeriodSelection = (value: string): value is PeriodCode | "" =>
 
 const OffersPage = ({ user, token, onUnauthorized }: OffersPageProps) => {
   const [period, setPeriod] = useState<PeriodCode | "">("");
+  const [search, setSearch] = useState("");
   const { offers, isLoading, error } = useOffers(token, period, onUnauthorized);
   const applyToOffer = useApplyToOffer(token, onUnauthorized);
+  const searchTerm = search.trim().toLowerCase();
+  const filteredOffers =
+    searchTerm === ""
+      ? offers
+      : offers.filter((offer) => offer.title.toLowerCase().includes(searchTerm));
 
   const renderContent = () => {
     if (error) return <ErrorState message={error} />;
     if (isLoading) return <LoadingState />;
-    if (offers.length === 0) return <EmptyState message="Aucune offre à afficher." />;
+    if (filteredOffers.length === 0) {
+      return (
+        <EmptyState
+          message={
+            searchTerm === ""
+              ? "Aucune offre à afficher."
+              : "Aucune offre ne correspond à votre recherche."
+          }
+        />
+      );
+    }
     return (
       <>
         <p className="result-count">
-          {offers.length} offre{offers.length > 1 ? "s" : ""}
+          {filteredOffers.length} offre{filteredOffers.length > 1 ? "s" : ""}
         </p>
-        <OfferTable offers={offers} onApply={user.kind === "STUDENT" ? applyToOffer : undefined} />
+        <OfferTable
+          offers={filteredOffers}
+          onApply={user.kind === "STUDENT" ? applyToOffer : undefined}
+        />
       </>
     );
   };
@@ -53,6 +73,7 @@ const OffersPage = ({ user, token, onUnauthorized }: OffersPageProps) => {
     <section>
       <h1>Offres de stage</h1>
       <p>{DESCRIPTIONS[user.kind]}</p>
+      <SearchField label="Rechercher une offre" value={search} onChange={setSearch} />
       <label>
         Période
         <select

@@ -87,6 +87,45 @@ describe("OffersPage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("statut 403");
   });
 
+  it("permet de candidater sans message et affiche la confirmation", async () => {
+  const fetchMock = stubFetch({
+    "/api/offers": () =>
+      Response.json([
+        {
+          id: 7,
+          title: "Assistant conversationnel interne",
+          companyShortName: "Nexalis",
+          academicYear: "2026-2027",
+          period: "P2",
+          status: "PUBLISHED",
+        },
+      ]),
+    "/api/applications": () =>
+      Response.json(
+        {
+          id: 20,
+          offerId: 7,
+          message: null,
+          status: "IN_PROGRESS",
+          appliedAt: "2026-11-03 14:30:00",
+        },
+        { status: 201 },
+      ),
+  });
+
+  render(<OffersPage user={studentUser} token="jeton" onUnauthorized={vi.fn()} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Candidater" }));
+
+  expect(await screen.findByRole("status")).toHaveTextContent("Candidature envoyée.");
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/api/applications",
+    expect.objectContaining({
+      method: "POST",
+      body: JSON.stringify({ offerId: 7 }),
+    }),
+  );
+});
+
   it("signale une session expirée", async () => {
     stubFetch({ "/api/offers": () => new Response(null, { status: 401 }) });
     const onUnauthorized = vi.fn();

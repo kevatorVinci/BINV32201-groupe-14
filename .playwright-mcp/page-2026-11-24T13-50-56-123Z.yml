@@ -1,0 +1,91 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]: Gesta
+    - navigation "Navigation principale" [ref=e121]:
+      - link "Accueil" [ref=e122] [cursor=pointer]:
+        - /url: /
+      - link "Offres" [active] [ref=e123] [cursor=pointer]:
+        - /url: /offres
+      - link "Mes candidatures" [ref=e124] [cursor=pointer]:
+        - /url: /mes-candidatures
+      - link "Entreprises" [ref=e125] [cursor=pointer]:
+        - /url: /entreprises
+    - generic [ref=e126]:
+      - generic [ref=e127]:
+        - strong [ref=e128]: Lucas Dupont
+        - generic [ref=e129]: Étudiant
+      - button "Changer d'utilisateur" [ref=e130] [cursor=pointer]
+  - note [ref=e5]: Mode démo — connexion sans mot de passe, réservée au développement local.
+  - main [ref=e6]:
+    - generic [ref=e135]:
+      - heading "Offres de stage" [level=1] [ref=e136]
+      - paragraph [ref=e137]: Les offres publiées.
+      - generic [ref=e138]:
+        - generic [ref=e139]: Rechercher une offre
+        - searchbox "Rechercher une offre" [ref=e140]
+      - generic [ref=e141]:
+        - text: Période
+        - combobox "Période" [ref=e142]:
+          - option "Toutes les périodes" [selected]
+          - option "P1"
+          - option "P2"
+          - option "Autre"
+      - paragraph [ref=e143]: 4 offres
+      - table [ref=e145]:
+        - rowgroup [ref=e146]:
+          - row [ref=e147]:
+            - columnheader "Titre" [ref=e148]
+            - columnheader "Entreprise" [ref=e149]
+            - columnheader "Année" [ref=e150]
+            - columnheader "Période" [ref=e151]
+            - columnheader "Statut" [ref=e152]
+            - columnheader "Candidature" [ref=e153]
+        - rowgroup [ref=e154]:
+          - row [ref=e155]:
+            - cell "Assistant conversationnel interne" [ref=e156]
+            - cell "Nexalis" [ref=e157]
+            - cell "2026-2027" [ref=e158]
+            - cell "P2" [ref=e159]
+            - cell "Publiée" [ref=e160]
+            - cell [ref=e162]:
+              - generic [ref=e163]:
+                - generic [ref=e164]:
+                  - text: Message facultatif pour « Assistant conversationnel interne »
+                  - textbox "Message facultatif pour « Assistant conversationnel interne »" [ref=e165]
+                - button "Candidater" [ref=e166] [cursor=pointer]
+          - row [ref=e167]:
+            - cell "Tableau de bord de qualité des données" [ref=e168]
+            - cell "Lumen Data" [ref=e169]
+            - cell "2026-2027" [ref=e170]
+            - cell "P2" [ref=e171]
+            - cell "Publiée" [ref=e172]
+            - cell [ref=e174]:
+              - generic [ref=e175]:
+                - generic [ref=e176]:
+                  - text: Message facultatif pour « Tableau de bord de qualité des données »
+                  - textbox "Message facultatif pour « Tableau de bord de qualité des données »" [ref=e177]
+                - button "Candidater" [ref=e178] [cursor=pointer]
+          - row [ref=e179]:
+            - cell "Application React de gestion de flotte" [ref=e180]
+            - cell "Lumen Digital" [ref=e181]
+            - cell "2026-2027" [ref=e182]
+            - cell "P2" [ref=e183]
+            - cell "Publiée" [ref=e184]
+            - cell [ref=e186]:
+              - generic [ref=e187]:
+                - generic [ref=e188]:
+                  - text: Message facultatif pour « Application React de gestion de flotte »
+                  - textbox "Message facultatif pour « Application React de gestion de flotte »" [ref=e189]
+                - button "Candidater" [ref=e190] [cursor=pointer]
+          - row [ref=e191]:
+            - cell "API REST de facturation" [ref=e192]
+            - cell "Orbis" [ref=e193]
+            - cell "2026-2027" [ref=e194]
+            - cell "P2" [ref=e195]
+            - cell "Publiée" [ref=e196]
+            - cell [ref=e198]:
+              - generic [ref=e199]:
+                - generic [ref=e200]:
+                  - text: Message facultatif pour « API REST de facturation »
+                  - textbox "Message facultatif pour « API REST de facturation »" [ref=e201]
+                - button "Candidater" [ref=e202] [cursor=pointer]
